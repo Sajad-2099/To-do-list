@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minimal To-Do</title>
+    <style>
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            max-width: 500px;
+            margin: 0 auto;
+            padding: 20px;
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        h1 {
+            text-align: center;
+            font-weight: 300;
+            margin-bottom: 30px;
+        }
+        
+        #todo-input {
+            width: 100%;
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            box-sizing: border-box;
+        }
+        
+        #todo-list {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .todo-item {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .todo-item:last-child {
+            border-bottom: none;
+        }
+        
+        .todo-text {
+            flex-grow: 1;
+            margin: 0 10px;
+        }
+        
+        .completed {
+            text-decoration: line-through;
+            color: #999;
+        }
+        
+        .delete-btn {
+            background: none;
+            border: none;
+            color: #ff5a5f;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        
+        .empty-state {
+            text-align: center;
+            color: #999;
+            padding: 40px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>To-Do</h1>
+    <input type="text" id="todo-input" placeholder="What needs to be done?" autofocus>
+    <ul id="todo-list"></ul>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const todoInput = document.getElementById('todo-input');
+            const todoList = document.getElementById('todo-list');
+            
+            // Load saved todos
+            loadTodos();
+            
+            // Add todo when Enter is pressed
+            todoInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter' && this.value.trim() !== '') {
+                    addTodo(this.value.trim());
+                    this.value = '';
+                    saveTodos();
+                }
+            });
+            
+            function addTodo(text) {
+                const li = document.createElement('li');
+                li.className = 'todo-item';
+                
+                li.innerHTML = `
+                    <span class="todo-text">${text}</span>
+                    <button class="delete-btn">×</button>
+                `;
+                
+                // Toggle completed state
+                li.querySelector('.todo-text').addEventListener('click', function() {
+                    this.classList.toggle('completed');
+                    saveTodos();
+                });
+                
+                // Delete todo
+                li.querySelector('.delete-btn').addEventListener('click', function() {
+                    li.remove();
+                    checkEmptyState();
+                    saveTodos();
+                });
+                
+                todoList.appendChild(li);
+                checkEmptyState();
+            }
+            
+            function checkEmptyState() {
+                if (todoList.children.length === 0) {
+                    todoList.innerHTML = '<div class="empty-state">No tasks yet. Add one above.</div>';
+                }
+            }
+            
+            function saveTodos() {
+                const todos = [];
+                document.querySelectorAll('.todo-item').forEach(item => {
+                    todos.push({
+                        text: item.querySelector('.todo-text').textContent,
+                        completed: item.querySelector('.todo-text').classList.contains('completed')
+                    });
+                });
+                localStorage.setItem('todos', JSON.stringify(todos));
+            }
+            
+            function loadTodos() {
+                const savedTodos = localStorage.getItem('todos');
+                if (savedTodos) {
+                    JSON.parse(savedTodos).forEach(todo => {
+                        addTodo(todo.text);
+                        if (todo.completed) {
+                            const lastItem = todoList.lastChild;
+                            lastItem.querySelector('.todo-text').classList.add('completed');
+                        }
+                    });
+                } else {
+                    checkEmptyState();
+                }
+            }
+        });
+    </script>
+</body>
+</html>
